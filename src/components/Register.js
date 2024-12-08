@@ -1,46 +1,70 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { registerUser } from "../api/auth";
+import { useNavigate } from "react-router-dom";
+import { TextField, Button, Typography, IconButton } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import Confetti from "react-confetti";
+import { useWindowSize } from "react-use";
 
 const Register = () => {
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [showConfetti, setShowConfetti] = useState(false);
+  const { width, height } = useWindowSize();
+  const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/register`,
-        formData
-      );
-      setMessage(response.data.message);
+      const data = await registerUser(email, password);
+      setMessage("Registration successful!");
+      setShowConfetti(true);
+      setTimeout(() => navigate("/login"), 3000); // Redirect to Login
     } catch (error) {
-      setMessage(error.response.data.message || "Error occurred");
+      setMessage("Registration failed. Please try again.");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="email"
-        name="email"
-        placeholder="Email"
-        onChange={handleChange}
-        required
-      />
-      <input
-        type="password"
-        name="password"
-        placeholder="Password"
-        onChange={handleChange}
-        required
-      />
-      <button type="submit">Register</button>
-      <p>{message}</p>
-    </form>
+    <div className="h-screen flex items-center justify-center bg-gray-100">
+      {showConfetti && <Confetti width={width} height={height} />}
+      <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
+        <div className="flex items-center mb-4">
+          <IconButton onClick={() => navigate(-1)}>
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h5" className="ml-2">
+            Sign Up
+          </Typography>
+        </div>
+        <form onSubmit={handleRegister}>
+          <TextField
+            label="Email"
+            variant="outlined"
+            fullWidth
+            className="mb-4"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextField
+            label="Password"
+            variant="outlined"
+            fullWidth
+            className="mb-4"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <Button variant="contained" color="primary" type="submit" fullWidth>
+            Sign Up
+          </Button>
+        </form>
+        <Typography className="mt-4 text-sm text-gray-500">
+          {message}
+        </Typography>
+      </div>
+    </div>
   );
 };
 
